@@ -1,0 +1,193 @@
+<!Doctype html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/milligram/1.2.3/milligram.min.css">
+    <!-- <script type="text/javascript" src="./lib/bignumber.min.js"></script> -->
+    <script type="text/javascript" src="./js/coinstack-1.1.19.min.js"></script>
+    <script type="text/javascript">
+
+        console.log('starting...');
+
+        var DEBUG = 1;
+
+        var client = new CoinStack('c7dbfacbdf1510889b38c01b8440b1', '10e88e9904f29c98356fd2d12b26de', 'testchain.blocko.io', 'https');
+        console.log("client: ", client);
+
+
+        var toAddress = "1B854qBra6X9eFcjhdEv1trctaaHKvw7L5";
+
+        <!-- client.getBalance(fromAddress, function (err, balance) { -->
+            <!-- if (DEBUG) console.log(CoinStack.Math.toBitcoin(balance) + 'BTC'); -->
+        <!-- }); -->
+
+        function getStatusinfo() {
+            var blockNumber = 0;
+
+            client.getBlockchainStatus(function (error, status) {
+                if (!error) {
+                    document.getElementById('blockinfo').value = status.best_height;
+
+                }
+                console.log("getBlockchainStatus: ", status);
+				console.log("status.best_height: ", status.best_height - 1);
+            });
+        }
+
+        function getBlockinfo() {
+            var blockNumber = 0;
+
+            client.getBlockchainStatus(function (err, status) {
+                console.log("status: ", status);
+
+                var blockNum = document.getElementById('blockinfo').value;
+                console.log("blockNumber : " + blockNum);
+
+                if (DEBUG) {
+                    console.log("getBlockinfo: ", status);
+                    console.log("best_block_hash: ", status.best_block_hash);
+                    console.log("best_height: ", status.best_height);
+                }
+
+                client.getBlock(status.best_block_hash, function (error, result) {
+                    if (!error) {
+
+                        if (DEBUG) {
+                            console.log('+getBlock', result);
+                            console.log('+parent', result.parent);
+                            console.log("latestBlock: ", result.height);
+                            console.log("currentBlock: ", blockNum);
+                            console.log("latestBlockTimestamp: ", Date(result.confirmation_time));
+                            console.log("latestBlockHash: ", result.best_block_hash);
+                            console.log("transactions: ", result.transaction_list);
+                        }
+
+                        document.getElementById('parent').innerText = result.parent;
+                        document.getElementById('latestBlock').innerText = result.height;
+                        document.getElementById("currentBlock").innerText = blockNum;
+                        document.getElementById('latestBlockTimestamp').innerText = Date(result.confirmation_time);
+                        document.getElementById("latestBlockHash").innerText = status.best_block_hash;
+                        document.getElementById('transactions').innerText = result.transaction_list.length;
+
+                        if (result.transaction_list.length) {
+                            //document.getElementById('transactions').innerText = result.transaction_list.length;
+                            document.getElementById('transactioninfo').value = result.transaction_list[0];
+                        }
+                    }
+                });
+            });
+        }
+
+        function getTransaction() {
+            var transactioninfo = document.getElementById('transactioninfo').value;
+
+            client.getTransaction(transactioninfo, function (error, traninfo) {
+                if (!error) {
+                    document.getElementById("TransactionHash").innerText = traninfo.transaction_hash;
+                    document.getElementById('TransactionAddress').innerText = traninfo.addresses;
+                    document.getElementById('script').innerText = traninfo.outputs[0].script;
+                    document.getElementById('value').innerText = traninfo.outputs[0].value;
+                    document.getElementById('Time').innerText = traninfo.time;
+
+
+                    if (DEBUG) {
+                        console.log(traninfo);
+                        console.log("transactioninfo : " + transactioninfo);
+                        // console.log("blockHash : " + traninfo.blockHash);
+                        // console.log("blockNumber : " + traninfo.blockNumber);
+                        // console.log("from : " + traninfo.from);
+                        // console.log("gas : " + traninfo.gas);
+                        // console.log("gasPrice : " + traninfo.gasPrice);
+                        // console.log("hash : " + traninfo.hash);
+
+                        // console.log("input : " + traninfo.input);
+                        // console.log("nonce : " + traninfo.nonce);
+                        // console.log("r : " + traninfo.r);
+                        // console.log("s : " + traninfo.s);
+                        // console.log("v : " + traninfo.v);
+
+                        // console.log("to : " + traninfo.to);
+                        // console.log("transactionIndex : " + traninfo.transactionIndex);
+                        // console.log("value : " + traninfo.value);
+                    }
+                } else {
+                    //res = error;
+                    console.log(error);
+                }
+
+            });
+        }
+    </script>
+
+
+</head>
+
+<body class="container" style="padding-top: 3%;" onload="getStatusinfo()">
+    <div class="container">
+      <h2><strong>Blockchain Monitor</strong></h2>
+        <div class="row">
+          <div class="column">
+            <div class="panel panel-default">
+              <div class="panel-heading">Bitcoin Network</div>
+              <br>
+              <input type="text" size="15" id="blockinfo" value="1" placeholder="input block number"></input>
+                <button type="button" onClick="getBlockinfo();">Get Block Info</button>
+                <br>
+              <div class="panel-body">
+                <h5>Parent:
+                    <strong id="parent"></strong>
+                </h5>
+                <h5>Latest Block Number:
+                    <strong id="latestBlock"></strong>
+                </h5>
+                <h5>Current Block Number:
+                    <strong id="currentBlock"></strong>
+                </h5>
+                <h5>Confirmation Time:
+                    <strong id="latestBlockTimestamp"></strong>
+                </h5>
+                <h5>Latest Block Hash:
+                    <strong id="latestBlockHash"></strong>
+                </h5>
+                <h5>Transactions:
+                    <strong id="transactions"></strong>
+                </h5>
+              </div>
+            </div>
+          </div>
+        </div>
+        <hr>
+        <div class="row">
+          <div class="column">
+            <input type="text" size="75" id="transactioninfo" value="1" placeholder="input transaction"></input>
+            <button type="button" onClick="getTransaction();">Get Transaction Info</button>
+              <div class="panel-body">
+                <h5>TransactionHash:
+                    <strong id="TransactionHash"></strong>
+                </h5>
+                <h5>TransactionAddress:
+                    <strong id="TransactionAddress"></strong>
+                </h5>
+                <h5>Validation Script:
+                    <strong id="script"></strong>
+                </h5>
+                <h5>Value:
+                    <strong id="value"></strong> satoshi
+                </h5>
+                <h5>Time:
+                    <strong id="Time"></strong>
+                </h5>
+            </div>
+        </div>
+    </div>
+    <br>
+</body>
+
+<footer class="py-5 bg-dark">
+    <div class="container">
+      <p class="m-0 text-center text-white"><b>Copyright &copy; Blocko 2019</b></p>
+    </div>
+  </footer>
+
+</html>
